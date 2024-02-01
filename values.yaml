@@ -1,0 +1,16 @@
+install:
+  backoffLimit: 4
+  kubeflowInitContainer:
+    image:
+      repository: bpopov/kubeflow-install
+      tag: latest
+kubernetesClusterDomain: cluster.local
+serviceAccount:
+  serviceAccount:
+    annotations: {}
+uninstall:
+  backoffLimit: 4
+  kubeflowInitContainer:
+    image:
+      repository: bpopov/kubeflow-install
+      tag: latest

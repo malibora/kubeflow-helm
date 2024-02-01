@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "kubeflow.fullname" . }}-service-account
+  labels:
+  {{- include "kubeflow.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.serviceAccount.serviceAccount.annotations | nindent 4 }}
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kubeflow-service-account-binding
+subjects:
+- kind: ServiceAccount
+  name: {{ include "kubeflow.fullname" . }}-service-account
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kubeflow.fullname" . }}-install
+  labels:
+    app: kubeflow
+  {{- include "kubeflow.labels" . | nindent 4 }}
+spec:
+  backoffLimit: {{ .Values.install.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        app: kubeflow
+    spec:
+      containers:
+      - args: 
+        - |
+          sed -i 's/#nebius-key/YCEE8JSMRBC567LNmJGGcWP5qGd5Y2sh/g' /app/nebius-deployment/patches/secrets.yaml &&
+          sed -i 's/#nebius-secret/YCMITkPh-vSz4X0gcDaV_XLvgycwTFDgWzA8qDIv/g' /app/nebius-deployment/patches/secrets.yaml &&
+          /app/hack/setup-kubeflow.sh
+        command:
+        - /bin/bash
+        - -c
+        env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.install.kubeflowInitContainer.image.repository }}:{{ .Values.install.kubeflowInitContainer.image.tag
+          | default .Chart.AppVersion }}
+        name: kubeflow-init-container
+        resources: {}
+      restartPolicy: Never
+      serviceAccountName: {{ include "kubeflow.fullname" . }}-service-account
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kubeflow.fullname" . }}-uninstall
+  labels:
+  {{- include "kubeflow.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-delete
+spec:
+  backoffLimit: {{ .Values.uninstall.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        app: kubeflow
+    spec:
+      containers:
+      - args:
+        - |
+          /app/hack/uninstall-kubeflow.sh
+        command:
+        - /bin/bash
+        - -c
+        env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.uninstall.kubeflowInitContainer.image.repository }}:{{
+          .Values.uninstall.kubeflowInitContainer.image.tag | default .Chart.AppVersion
+          }}
+        name: kubeflow-init-container
+        resources: {}
+      restartPolicy: Never
+      serviceAccountName: {{ include "kubeflow.fullname" . }}-service-account
