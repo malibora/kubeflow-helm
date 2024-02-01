@@ -38,7 +38,7 @@ spec:
       - args: 
         - |
           sed -i 's/#nebius-key/{{.Values.s3Key}}/g' /app/nebius-deployment/patches/secrets.yaml &&
-          sed -i 's/#nebius-secret/{{.Values.s2Secret}}/g' /app/nebius-deployment/patches/secrets.yaml &&
+          sed -i 's/#nebius-secret/{{.Values.s3Secret}}/g' /app/nebius-deployment/patches/secrets.yaml &&
           /app/hack/setup-kubeflow.sh
         command:
         - /bin/bash
