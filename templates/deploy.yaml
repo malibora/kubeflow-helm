@@ -37,8 +37,8 @@ spec:
       containers:
       - args: 
         - |
-          sed -i 's/#nebius-key/YCEE8JSMRBC567LNmJGGcWP5qGd5Y2sh/g' /app/nebius-deployment/patches/secrets.yaml &&
-          sed -i 's/#nebius-secret/YCMITkPh-vSz4X0gcDaV_XLvgycwTFDgWzA8qDIv/g' /app/nebius-deployment/patches/secrets.yaml &&
+          sed -i 's/#nebius-key/{{.Values.s3Key}}/g' /app/nebius-deployment/patches/secrets.yaml &&
+          sed -i 's/#nebius-secret/{{.Values.s2Secret}}/g' /app/nebius-deployment/patches/secrets.yaml &&
           /app/hack/setup-kubeflow.sh
         command:
         - /bin/bash
